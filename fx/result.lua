@@ -7,6 +7,7 @@
 ---
 ---@module fx.result
 
+local Parse = require('fx.parse')
 local Result = {}
 
 ---Create a successful result
@@ -16,11 +17,25 @@ function Result.ok(value)
     return { ok = true, value = value }
 end
 
----Create a failed result
+---Create a failed result.
+---Parses raw errors (e.g. "@resource/file.lua:23: message") into message + metadata.
 ---@param err string|table Error message or error object
----@return table { ok = false, error = err }
+---@return table { ok = false, error = string, errorMeta = ParsedError? }
 function Result.err(err)
-    return { ok = false, error = err }
+    local raw
+    if type(err) == 'string' then
+        raw = err
+    elseif type(err) == 'table' and err.message then
+        raw = err.message
+    else
+        raw = tostring(err)
+    end
+    local parsed = Parse.error(raw)
+    local result = { ok = false, error = parsed.message }
+    if parsed.location or parsed.resource then
+        result.errorMeta = parsed
+    end
+    return result
 end
 
 ---Check if result is successful
@@ -37,37 +52,23 @@ function Result.isErr(r)
     return type(r) == 'table' and r.ok == false
 end
 
-local Parse = require('fx.parse')
-
----Get raw error string from a result
----@param r table Result
----@return string
-local function getRawError(r)
-    if type(r.error) == 'string' then
-        return r.error
-    end
-    if type(r.error) == 'table' and r.error.message then
-        return r.error.message
-    end
-    return tostring(r.error)
-end
-
 ---Extract the error message from a result for display/logging.
----Strips trace data (file:line) for cleaner messages.
+---Returns message only (no path/location).
 ---@param r table Result
 ---@return string
 local function getErrorMessage(r)
-    return Parse.error(getRawError(r)).message
+    return type(r.error) == 'string' and r.error or tostring(r.error)
 end
 
----Get parsed error info (message + location) from a failed result.
+---Get parsed error info (message + optional metadata) from a failed result.
+---Metadata includes location, file, line, resource when parseable.
 ---@param r table Result
 ---@return table|nil ParsedError or nil if result is Ok
 function Result.getErrorInfo(r)
     if Result.isOk(r) then
         return nil
     end
-    return Parse.error(getRawError(r))
+    return r.errorMeta or Parse.error(r.error)
 end
 
 ---Unwrap a result: return value on success, throw on failure.

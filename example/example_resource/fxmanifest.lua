@@ -1,7 +1,7 @@
 fx_version 'cerulean'
 game 'gta5'
 
-name 'example-resource'
+name 'example_resource'
 description 'Example usage of lua-effect'
 version '1.0.0'
 

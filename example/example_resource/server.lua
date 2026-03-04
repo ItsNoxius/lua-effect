@@ -16,13 +16,14 @@ end
 -- Export: getUser - uses local fetchUser via fx.invoke
 exports('getUser', fx.wrap(function(userId)
     return fx.invokeUnwrap(fetchUser, userId)
-end, true))
+end))
 
 -- Export: divide - standalone, errors on divide by zero
 exports('divide', fx.wrap(function(a, b)
+    assert(b ~= nil, 'Missing divisor')
     assert(b ~= 0, 'Cannot divide by zero')
     return a / b
-end, true))
+end))
 
 -- Export: getUserWithBalance - nested local calls (validate -> fetch -> calculate)
 local function getBalance(userId)
@@ -34,6 +35,6 @@ exports('getUserWithBalance', fx.wrap(function(userId)
     local user = fx.invokeUnwrap(fetchUser, userId)
     local balance = fx.invokeUnwrap(getBalance, userId)
     return { user = user, balance = balance }
-end, true))
+end))
 
-print('[example-resource] Loaded - exports: getUser, divide, getUserWithBalance')
+print('[example_resource] Loaded - exports: getUser, divide, getUserWithBalance')

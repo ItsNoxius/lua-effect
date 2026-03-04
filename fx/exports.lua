@@ -7,7 +7,7 @@
 ---These utilities ensure the actual error message is preserved and returned.
 ---
 ---Usage:
----  Export: exports('getUser', fx.wrap(function(userId) ... end, true))
+---  Export: exports('getUser', fx.wrap(function(userId) ... end))
 ---  Callback: lib.callback.register('name', fx.wrap(function(source, ...) ... end))
 ---  Invoke export: fx.invokeExport('myresource', 'getUser', 123)
 ---
@@ -20,24 +20,19 @@ local Result = require('fx.result')
 local Exports = {}
 
 ---Wrap a function for use in exports or callbacks.
----Does NOT alter the function's behavior: it returns exactly what your function returns,
----and throws exactly what your function throws.
----
----For exports: use fx.wrap(fn, true) to strip the first arg (exports table) so you can
----write function(userId) instead of function(self, userId).
----
----For callbacks: use fx.wrap(fn) — pass through all args (server: source, ...; client: ...).
+---Catches any throw and returns Result.err instead, so errors propagate as values
+---across resource boundaries. FiveM will not log SCRIPT ERROR in the called resource.
 ---
 ---@param fn function(...): any The function (may use error/assert)
----@param stripFirst? boolean|string If true or 'export', strip first arg (for FiveM exports)
 ---@return function(...): any
-function Exports.wrap(fn, stripFirst)
-    if stripFirst == true or stripFirst == 'export' then
-        return function(self, ...)
-            return fn(...)
+function Exports.wrap(fn)
+    return function(...)
+        local ok, ret = pcall(fn, ...)
+        if not ok then
+            return Result.err(ret)
         end
+        return ret
     end
-    return fn
 end
 
 ---Invoke a local function and return a Result.
@@ -79,6 +74,10 @@ function Exports.invokeExport(resourceName, exportName, ...)
     local ok, ret1 = pcall(exportFn, res, ...)
     if not ok then
         return Result.err(ret1)
+    end
+    -- Export may return Result (from fx.wrap catch or explicit return) — pass through
+    if type(ret1) == 'table' and (ret1.ok == true or ret1.ok == false) then
+        return ret1
     end
     return Result.ok(ret1)
 end

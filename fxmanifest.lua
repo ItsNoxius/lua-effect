@@ -14,3 +14,8 @@ shared_scripts {
     '@ox_lib/init.lua',
     'fx.lua',
 }
+
+files {
+    'fx.lua',
+    'fx/**/*.lua',
+}

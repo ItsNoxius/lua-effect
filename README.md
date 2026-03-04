@@ -18,7 +18,7 @@ You can keep using standard Lua `error()` and `assert()`; `fx` does not change h
 - **Direct function calls**: Unchanged. Call any function normally; no wrapping required.
 - **`fx.invoke(fn, ...)`**: Local functions. Catches throws and returns a Result. Zero overhead when calling the function directly.
 - **`fx.invokeExport(resource, export, ...)`**: Exports. Same Result-based error handling.
-- **`fx.wrap(fn, true)`**: For exports, strips the first arg (exports table). **`fx.wrap(fn)`**: For callbacks, pass through. Does not alter return values or error behavior.
+- **`fx.wrap(fn)`**: For exports and callbacks. Catches throws and returns Result.err so errors propagate as values across resource boundaries.
 
 ---
 
@@ -54,7 +54,7 @@ local fx = require('@lua-effect.fx')
 
 ### Exporting (resource that defines the export)
 
-Optionally wrap with `fx.wrap` so you can use `function(userId)` instead of `function(self, userId)`:
+Wrap with `fx.wrap` so errors propagate as values instead of throwing:
 
 ```lua
 -- In your database resource
@@ -62,7 +62,7 @@ exports('getUser', fx.wrap(function(userId)
     local user = GetUserFromDb(userId)
     assert(user, 'User not found: ' .. tostring(userId))
     return user
-end, true))
+end))
 ```
 
 ### Invoking (resource that calls the export)
@@ -124,7 +124,7 @@ end
 -- Export uses nested local calls
 exports('getUser', fx.wrap(function(userId)
     return fx.invokeUnwrap(fetchUser, userId)
-end, true))
+end))
 ```
 
 ### Cross-scope callbacks (server ↔ client)
@@ -172,7 +172,7 @@ local result = fx.invoke(lib.callback.await, 'myresource:getPlayerData', false, 
 
 | Function | Description |
 |----------|-------------|
-| `fx.wrap(fn, true?)` | Wrap for exports (true=strip self) or callbacks (pass through) |
+| `fx.wrap(fn)` | Wrap for exports/callbacks; catches throws, returns Result.err |
 | `fx.invoke(fn, ...)` | Call a local function, return Result |
 | `fx.invokeUnwrap(fn, ...)` | Call a local function, return value or throw on error |
 | `fx.invokeExport(resource, export, ...)` | Call an export, return Result |
@@ -233,7 +233,7 @@ exports('getPlayerData', fx.wrap(function(playerId)
     local data = GetData(playerId)
     assert(data, 'Player not found')
     return data
-end, true))
+end))
 
 -- resource-b/server.lua
 local data = fx.invokeExportUnwrap('resource-a', 'getPlayerData', 123)  -- Real error message
