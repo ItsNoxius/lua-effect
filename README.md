@@ -14,39 +14,39 @@ You can keep using standard Lua `error()` and `assert()`; `fx` does not change h
 
 ### Backwards compatibility
 
-- **Raw `exports.resource:name()`**: Unchanged. Returns the same values, throws on error (FiveM will still show its generic message for throws).
+- **Raw `exports.resource:name()` on wrapped exports**: Success returns the raw value; failure returns `Result.err` (no throw). Unwrapped exports behave as before.
 - **Direct function calls**: Unchanged. Call any function normally; no wrapping required.
 - **`fx.invoke(fn, ...)`**: Local functions. Catches throws and returns a Result. Zero overhead when calling the function directly.
 - **`fx.invokeExport(resource, export, ...)`**: Exports. Same Result-based error handling.
-- **`fx.wrap(fn)`**: For exports and callbacks. Catches throws and returns Result.err so errors propagate as values across resource boundaries.
+- **`fx.wrap(fn)`**: For exports and callbacks. Success returns the raw value; failure returns `Result.err`.
 
 ---
 
 ## Installation
 
-Requires [ox_lib](https://coxdocs.dev/ox_lib).
-2. Add it as a dependency in your resource’s `fxmanifest.lua`:
+1. Add `lua-effect` to your server's `resources` folder.
+2. Add it as a dependency in your resource's `fxmanifest.lua`:
 
 ```lua
 fx_version 'cerulean'
 game 'gta5'
 
 dependencies {
-    'ox_lib',
     'lua-effect',
 }
 
 shared_scripts {
-    '@ox_lib/init.lua',
     '@lua-effect/fx.lua',
 }
 ```
 
-Then use `fx` (global) or inline require:
+3. Use `fx` (global) or inline require:
 
 ```lua
 local fx = require('@lua-effect.fx')
 ```
+
+**Optional:** [ox_lib](https://coxdocs.dev/ox_lib) is only required if you use server ↔ client callbacks with `fx.wrap`. Add `ox_lib` to `dependencies` and `@ox_lib/init.lua` to `shared_scripts` in those resources.
 
 ---
 
@@ -129,7 +129,7 @@ end))
 
 ### Cross-scope callbacks (server ↔ client)
 
-Use [ox_lib](https://coxdocs.dev/ox_lib/Modules/Callback) with `fx.wrap` for handlers:
+Requires [ox_lib](https://coxdocs.dev/ox_lib). Use `fx.wrap` for handlers and `fx.invoke` when awaiting:
 
 ```lua
 -- Server: lib.callback.register with fx.wrap
@@ -152,12 +152,14 @@ local result = fx.invoke(lib.callback.await, 'myresource:getPlayerData', false, 
 |----------|-------------|
 | `fx.ok(value)` | Create a success result |
 | `fx.err(message)` | Create a failure result |
+| `fx.isResult(result)` | Returns `true` if value is a tagged fx Result |
 | `fx.isOk(result)` | Returns `true` if result is success |
 | `fx.isErr(result)` | Returns `true` if result is failure |
 | `fx.unwrap(result)` | Return value or throw with the error message |
 | `fx.assertResult(result, msg?)` | Like `assert`: return value or throw (optional custom message) |
 | `fx.unwrapOr(result, default)` | Return value or `default` on failure |
 | `fx.map(result, fn)` | Apply `fn` to the value if success |
+| `fx.mapErr(result, fn)` | Transform the error if failure |
 | `fx.andThen(result, fn)` | Chain: if success, run `fn(value)` and return its result |
 | `fx.orElse(result, fn)` | Recover: if failure, run `fn(error)` and return its result |
 
@@ -172,7 +174,7 @@ local result = fx.invoke(lib.callback.await, 'myresource:getPlayerData', false, 
 
 | Function | Description |
 |----------|-------------|
-| `fx.wrap(fn)` | Wrap for exports/callbacks; catches throws, returns Result.err |
+| `fx.wrap(fn)` | Wrap for exports/callbacks; success returns raw value, failure returns `Result.err` |
 | `fx.invoke(fn, ...)` | Call a local function, return Result |
 | `fx.invokeUnwrap(fn, ...)` | Call a local function, return value or throw on error |
 | `fx.invokeExport(resource, export, ...)` | Call an export, return Result |

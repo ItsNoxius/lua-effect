@@ -16,6 +16,8 @@ This document helps AI assistants implement `lua-effect` correctly when editing 
 
 5. **`result.error` is message-only** — Path/location is in `result.errorMeta` when available.
 
+6. **`fx.wrap` return shapes** — On success, wrapped exports/callbacks return the **raw value**. On failure, they return **`Result.err`**. Use `fx.invokeExport` / `fx.invoke` at call sites for consistent `Result` handling.
+
 ---
 
 ## Decision Tree
@@ -100,15 +102,15 @@ local result = fx.invoke(lib.callback.await, 'name', false, playerId)
 
 ```lua
 dependencies {
-    'ox_lib',
     'lua-effect',
 }
 
 shared_scripts {
-    '@ox_lib/init.lua',
     '@lua-effect/fx.lua',
 }
 ```
+
+Add `ox_lib` only when using callbacks (see [Exports & Callbacks](exports-and-callbacks.md)).
 
 ---
 

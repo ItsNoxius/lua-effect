@@ -1,7 +1,9 @@
 ---# fx - Effect-style data and error flow for FiveM Lua
 ---
----Requires ox_lib. Use in fxmanifest:
----  shared_scripts { '@ox_lib/init.lua', '@lua-effect/fx.lua' }
+---Use in fxmanifest:
+---  shared_scripts { '@lua-effect/fx.lua' }
+---
+---ox_lib is optional — only needed if you use lib.callback with fx.wrap.
 ---
 ---Then: local fx = require('@lua-effect.fx')
 ---

@@ -22,5 +22,5 @@ Effect-style data and error flow for FiveM Lua. This library improves error prop
 
 ## Dependencies
 
-- [ox_lib](https://coxdocs.dev/ox_lib) (required)
 - FiveM/CitizenFX
+- [ox_lib](https://coxdocs.dev/ox_lib) (optional — only for server ↔ client callbacks)

@@ -21,6 +21,7 @@ return {
     ---@see fx.result
     ok = Result.ok,
     err = Result.err,
+    isResult = Result.isResult,
     isOk = Result.isOk,
     isErr = Result.isErr,
     unwrap = Result.unwrap,

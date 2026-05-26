@@ -3,12 +3,32 @@
 ## Installation
 
 1. Add `lua-effect` to your server's `resources` folder.
-2. Add dependencies to your resource's `fxmanifest.lua`:
+2. Add `lua-effect` to your resource's `fxmanifest.lua`:
 
 ```lua
 fx_version 'cerulean'
 game 'gta5'
 
+dependencies {
+    'lua-effect',
+}
+
+shared_scripts {
+    '@lua-effect/fx.lua',
+}
+```
+
+3. Use `fx` (global) or require:
+
+```lua
+local fx = require('@lua-effect.fx')
+```
+
+### Optional: ox_lib for callbacks
+
+If you use [ox_lib](https://coxdocs.dev/ox_lib) callbacks with `fx.wrap`, also add:
+
+```lua
 dependencies {
     'ox_lib',
     'lua-effect',
@@ -18,12 +38,6 @@ shared_scripts {
     '@ox_lib/init.lua',
     '@lua-effect/fx.lua',
 }
-```
-
-3. Use `fx` (global) or require:
-
-```lua
-local fx = require('@lua-effect.fx')
 ```
 
 ## Minimal Example
