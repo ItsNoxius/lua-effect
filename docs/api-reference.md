@@ -6,6 +6,7 @@
 |----------|-----------|-------------|
 | `fx.ok` | `(value: any) -> Result` | Create a success result |
 | `fx.err` | `(err: string \| table) -> Result` | Create a failure result. Parses raw errors into message + metadata. |
+| `fx.isResult` | `(r: any) -> boolean` | `true` if value is a tagged fx Result |
 | `fx.isOk` | `(r: Result) -> boolean` | `true` if result is success |
 | `fx.isErr` | `(r: Result) -> boolean` | `true` if result is failure |
 | `fx.unwrap` | `(r: Result, level?: number) -> any` | Return value or throw with error message |
@@ -19,8 +20,8 @@
 
 ### Result Structure
 
-- **Success:** `{ ok = true, value = any }`
-- **Failure:** `{ ok = false, error = string, errorMeta?: ParsedError }`
+- **Success:** `{ ok = true, value = any, _fxResult = true }`
+- **Failure:** `{ ok = false, error = string, _fxResult = true, errorMeta?: ParsedError }`
   - `error` — message only (no path)
   - `errorMeta` — optional: `{ message, location, file, line, resource }`
 
@@ -39,7 +40,7 @@
 
 | Function | Signature | Description |
 |----------|-----------|-------------|
-| `fx.wrap` | `(fn: (...any) -> any) -> (...any) -> any` | Wrap for exports/callbacks. Catches throws, returns `Result.err`. FiveM will not log SCRIPT ERROR in the called resource. |
+| `fx.wrap` | `(fn: (...any) -> any) -> (...any) -> any` | Wrap for exports/callbacks. Success: raw value. Failure: `Result.err`. |
 | `fx.invoke` | `(fn: function, ...any) -> Result` | Call a local function, return Result |
 | `fx.invokeUnwrap` | `(fn: function, ...any) -> any` | Call a local function, return value or throw |
 | `fx.invokeExport` | `(resource: string, export: string, ...any) -> Result` | Call an export, return Result |

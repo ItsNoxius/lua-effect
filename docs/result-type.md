@@ -6,11 +6,13 @@
 
 ```lua
 -- Success
-{ ok = true, value = any }
+{ ok = true, value = any, _fxResult = true }
 
 -- Failure
-{ ok = false, error = string, errorMeta?: ParsedError }
+{ ok = false, error = string, _fxResult = true, errorMeta?: ParsedError }
 ```
+
+The `_fxResult` tag prevents domain objects with an `ok` field from being mistaken for Results. Use `fx.isResult(r)` to check.
 
 - `error` — message only (path/location stripped for display)
 - `errorMeta` — optional metadata: `{ message, location, file, line, resource }`

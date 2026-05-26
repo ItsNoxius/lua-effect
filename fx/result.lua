@@ -10,11 +10,20 @@
 local Parse = require('fx.parse')
 local Result = {}
 
+---Tag field identifying fx Result tables (avoids collision with domain objects).
+Result.TAG = '_fxResult'
+
+---@param r any
+---@return boolean
+function Result.isResult(r)
+    return type(r) == 'table' and r[Result.TAG] == true
+end
+
 ---Create a successful result
 ---@param value any The success value
 ---@return table { ok = true, value = value }
 function Result.ok(value)
-    return { ok = true, value = value }
+    return { ok = true, value = value, [Result.TAG] = true }
 end
 
 ---Create a failed result.
@@ -31,7 +40,7 @@ function Result.err(err)
         raw = tostring(err)
     end
     local parsed = Parse.error(raw)
-    local result = { ok = false, error = parsed.message }
+    local result = { ok = false, error = parsed.message, [Result.TAG] = true }
     if parsed.location or parsed.resource then
         result.errorMeta = parsed
     end
@@ -42,14 +51,14 @@ end
 ---@param r table Result to check
 ---@return boolean
 function Result.isOk(r)
-    return type(r) == 'table' and r.ok == true
+    return Result.isResult(r) and r.ok == true
 end
 
 ---Check if result is a failure
 ---@param r table Result to check
 ---@return boolean
 function Result.isErr(r)
-    return type(r) == 'table' and r.ok == false
+    return Result.isResult(r) and r.ok == false
 end
 
 ---Extract the error message from a result for display/logging.

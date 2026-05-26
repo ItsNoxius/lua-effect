@@ -6,12 +6,7 @@ description 'Effect-style data and error flow for FiveM - proper error propagati
 version '1.0.0'
 author 'Noxius'
 
-dependencies {
-    'ox_lib',
-}
-
 shared_scripts {
-    '@ox_lib/init.lua',
     'fx.lua',
 }
 

@@ -18,6 +18,28 @@ end))
 - FiveM will not log SCRIPT ERROR in the called resource
 - The caller receives the actual error message via `fx.invokeExport` or `fx.invokeExportUnwrap`
 
+### fx.wrap return shapes
+
+`fx.wrap` is asymmetric by design:
+
+| Outcome | Return value |
+|---------|--------------|
+| Success | **Raw value** — whatever your function returned |
+| Failure | **`Result.err`** — `{ ok = false, error = string, errorMeta? }` |
+
+When calling a wrapped export via **`fx.invokeExport`**, the invoke layer normalizes both paths into a `Result`. When calling **raw** (`exports['resource']:name(...)`), you must handle both shapes:
+
+```lua
+local ret = exports['my-resource']:getUser(123)
+if type(ret) == 'table' and ret.ok == false then
+    print('Error:', ret.error)
+else
+    print('User:', ret.name)
+end
+```
+
+Prefer `fx.invokeExport` or `fx.invokeExportUnwrap` at call sites so you always get a consistent `Result`.
+
 ### FiveM Export Behavior
 
 FiveM does **not** pass the exports table as a first argument when invoking exports. Your function receives only the arguments the caller provides. Use `function(userId)` not `function(self, userId)`.
@@ -47,11 +69,12 @@ local user = fx.invokeExportUnwrap('my-resource', 'getUser', 123)
 -- Throws with real error message if export fails
 ```
 
-### Option 3: Raw call (unchanged behavior)
+### Option 3: Raw call (wrapped export)
 
 ```lua
-local user = exports['my-resource']:getUser(123)
--- Returns value or throws; FiveM may show generic error message
+local ret = exports['my-resource']:getUser(123)
+-- Success: raw user object. Failure (fx.wrap): Result.err table — not a throw.
+-- Prefer fx.invokeExport for consistent Result handling.
 ```
 
 ---
@@ -79,6 +102,8 @@ end))
 ---
 
 ## ox_lib Callbacks (Server ↔ Client)
+
+Requires [ox_lib](https://coxdocs.dev/ox_lib) in resources that use callbacks. Add `ox_lib` to `dependencies` and `@ox_lib/init.lua` to `shared_scripts` in those resources only.
 
 Use `fx.wrap` for callback handlers and `fx.invoke` when awaiting:
 

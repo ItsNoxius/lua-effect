@@ -19,6 +19,15 @@ local Result = require('fx.result')
 
 local Exports = {}
 
+---@param ret any
+---@return table Result
+local function toResult(ret)
+    if Result.isResult(ret) then
+        return ret
+    end
+    return Result.ok(ret)
+end
+
 ---Wrap a function for use in exports or callbacks.
 ---Catches any throw and returns Result.err instead, so errors propagate as values
 ---across resource boundaries. FiveM will not log SCRIPT ERROR in the called resource.
@@ -46,7 +55,7 @@ function Exports.invoke(fn, ...)
     if not ok then
         return Result.err(ret1)
     end
-    return Result.ok(ret1)
+    return toResult(ret1)
 end
 
 ---Invoke a local function and unwrap the result.
@@ -76,10 +85,7 @@ function Exports.invokeExport(resourceName, exportName, ...)
         return Result.err(ret1)
     end
     -- Export may return Result (from fx.wrap catch or explicit return) — pass through
-    if type(ret1) == 'table' and (ret1.ok == true or ret1.ok == false) then
-        return ret1
-    end
-    return Result.ok(ret1)
+    return toResult(ret1)
 end
 
 ---Invoke an export and unwrap the result.
